@@ -25,15 +25,16 @@ public class ParallelMapperImpl implements ParallelMapper {
     }
 
     /**
-     * Maps function {@code function} over specified {@code args}.
-     * Mapping for each element performs in parallel.
+     * Maps function {@code function} over specified {@code args}. Mapping for each element performs
+     * in parallel.
      *
      * @param function function
-     * @param args     args
+     * @param args args
      * @throws InterruptedException if calling thread was interrupted
      */
     @Override
-    public <T, R> List<R> map(Function<? super T, ? extends R> function, List<? extends T> args) throws InterruptedException {
+    public <T, R> List<R> map(Function<? super T, ? extends R> function, List<? extends T> args)
+            throws InterruptedException {
         List<Job<T, R>> jobList = new ArrayList<>();
         SyncedClock counter = new SyncedClock(args.size());
         args.forEach(arg -> jobList.add(new Job<>(function, arg, counter)));
@@ -102,23 +103,3 @@ public class ParallelMapperImpl implements ParallelMapper {
     }
 }
 
-class SyncedClock {
-    final int resultedValue;
-    volatile int value = 0;
-
-    public SyncedClock(int finishValue) {
-        this.resultedValue = finishValue;
-    }
-
-    public synchronized void incAndNotifyOnFinish() {
-        if (++value == resultedValue) {
-            this.notify();
-        }
-    }
-
-    public synchronized void waitUntilFinish() throws InterruptedException {
-        while (resultedValue != value) {
-            this.wait();
-        }
-    }
-}
